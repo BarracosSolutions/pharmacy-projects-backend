@@ -1,11 +1,171 @@
 <?php
 
-require("Toro.php");
+require("Toro.php"); 
 header('Access-Control-Allow-Origin: *'); 
 header("Access-Control-Allow-Credentials: true");
 header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
 header('Access-Control-Max-Age: 1000');
 header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token , Authorization');
+
+class PacienteHandler {
+    function get($PatientId = null) {
+        if($PatientId != null){
+            try {
+                echo $this-> selectPaciente($PatientId);
+            } catch (Exception $e) {
+                echo "Failed: " . $e->getMessage();
+            }
+        }else{
+            try {
+                echo $this-> selectPacientes();
+            } catch (Exception $e) {
+                echo "Failed: " . $e->getMessage();
+            }
+        }
+    }
+
+    function post($PatientId = null) {
+         if($PatientId != null){
+            try {
+            echo $this-> deletePaciente($PatientId);
+            } catch (Exception $e) {
+            echo "Failed: " . $e->getMessage();
+            }
+         }else{
+            if($_POST['isUpdate'] == 'true'){  #quitar las comillas si es raw
+                try {
+                  echo $this-> updatePaciente($_POST['PatientId'], $_POST['PatientFirtsNm'], $_POST['PatientLastNm'],  $_POST['MedicationDescription'],  $_POST['LastUpdateDtm']);
+                
+                } catch (Exception $e) {
+                    echo "Failed: " . $e->getMessage();
+                }
+            } else{
+                try {
+                    echo $this-> insertarPaciente($_POST['PatientId'], $_POST['PatientFirtsNm'], $_POST['PatientLastNm'],  $_POST['MedicationDescription'],  $_POST['LastUpdateDtm']);
+                } catch (Exception $e) {
+                    echo "Failed: " . $e->getMessage();
+                }
+            }
+         }
+    }
+
+    function put() {
+        try {
+           echo $this-> updatePaciente($_POST['PatientId'], $_POST['PatientFirtsNm'], $_POST['PatientLastNm'],  $_POST['MedicationDescription'],  $_POST['LastUpdateDtm']);
+        } catch (Exception $e) {
+          echo "Failed: " . $e->getMessage();
+        }
+    }
+
+    public  function selectPacientes(){
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                $flag = 1;
+                $query = 'SELECT * FROM patient;'; # WHERE flag = '.$flag.';';
+                $results = $file_db->query($query);		
+                $data = $results->fetchAll();	
+                return json_encode($data);
+            }catch(PDOException $e) {
+                //echo $e->getMessage();
+                return array();
+            }
+        
+    }
+
+     public function selectPaciente($PatientId){
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                $statement  = $file_db->prepare('SELECT * FROM patient WHERE PacientId = :PatientId;');
+                $statement->bindValue(':PatientId', $PatientId);
+                $statement->execute();
+                sleep(2);
+                $result = $statement->fetch();
+                return json_encode($result);
+            }catch(PDOException $e) {
+                //echo $e->getMessage();
+                return null;
+            }
+    }
+
+    public function insertarPaciente($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm){
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                // Create tables  #autoincremental
+                $file_db->exec("CREATE TABLE IF NOT EXISTS patient (
+                                PatientId INTEGER PRIMARY KEY, 
+                                PatientFirtsNm  TEXT, 
+                                PatientLastNm TEXT, 
+                                MedicationDescription TEXT,
+                                LastUpdateDtm TEXT )");
+                    
+                
+                $insert = "INSERT INTO patient (PatientId, PatientFirtsNm, PatientLastNm,MedicationDescription,LastUpdateDtm) 
+                            VALUES (:PatientId, :PatientFirtsNm, :PatientLastNm,:MedicationDescription,:LastUpdateDtm)";
+                $stmt = $file_db->prepare($insert);
+            
+                // Execute statement
+                $stmt->execute([
+                        ':PatientId' => $PatientId,
+                        ':PatientFirtsNm' => $PatientFirtsNm,
+                        ':PatientLastNm' => $PatientLastNm,
+                        ':MedicationDescription' => $MedicationDescription,
+                        ':LastUpdateDtm' => $LastUpdateDtm
+                    ]);
+                
+                $lastId = $file_db->lastInsertId();
+                
+                return json_encode($lastId);
+            
+            }
+            catch(PDOException $e) {
+                echo "insert";#$e->getMessage();
+                return null;
+            }
+    }
+
+    public function updatePaciente($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm) {
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                $flag = 1;
+
+                $sql = 'UPDATE patient SET PatientFirtsNm = "'.$PatientFirtsNm.'" , PatientLastNm = "'.$PatientLastNm.'", MedicationDescription = "'.$MedicationDescription.'", LastUpdateDtm = "'.$LastUpdateDtm.'" WHERE PatientId = ' .$PatientId.';';
+            
+                $result = $file_db->exec($sql);
+                
+                return json_encode($result);
+
+            }	catch(PDOException $e) {
+                echo $e->getMessage();
+                return null;
+            }
+    }
+
+    public function deletePaciente($PatientId) {
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                $sql = "DELETE FROM patient WHERE PatientId = :PatientId";
+        
+                $stmt = $file_db->prepare($sql);
+                $stmt->execute([':PatientId' => $PatientId]);
+
+                $result = $stmt->rowCount();
+                return json_encode($result);;
+            }	catch(PDOException $e) {
+                return null;
+            }
+    }
+
+}
 
 class FacturaHandler {
     function get($numero = null) {
@@ -169,204 +329,14 @@ class FacturaHandler {
 
 }
 
-class ProductoHandler {
-    function get($facturaId) {
-        try {
-           echo  $this->selectProductos($facturaId);
-        } catch (Exception $e) {
-          echo "Failed: " . $e->getMessage();
-        }
-    }
-
-    function post($id = null) {
-    
-        if($id != null){
-            try {
-                echo $this->deleteProduct($id);
-            } catch (Exception $e) {
-                echo "Failed: " . $e->getMessage();
-            }
-        } else{
-            try {
-                $producto = array( 'cantidad'=> $_POST['cantidad'],'descripcion'=> $_POST['descripcion'],'valor'=> $_POST['valor'],'subtotal'=> $_POST['subtotal']);
-                echo $this->insertarProducto($_POST['facturaId'], $producto);
-            } catch (Exception $e) {
-                echo "Failed: " . $e->getMessage();
-            }
-        }
-    }
-
-  
-    public function selectProductos($facturaId){
-            try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
-									PDO::ERRMODE_EXCEPTION);
-                $flag= 1;
-                $query = 'SELECT * FROM producto WHERE facturaId='.$facturaId.';';
-                $results = $file_db->query($query);
-                $data = $results->fetchAll();
-                return json_encode($data);
-            }catch(PDOException $e) {
-                //echo $e->getMessage();
-                return array();
-            }
-    }
-
-    public function insertarProducto($facturaId, $producto){
-            try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
-									PDO::ERRMODE_EXCEPTION);
-                $file_db->exec("CREATE TABLE IF NOT EXISTS producto (
-                                id INTEGER PRIMARY KEY,
-                                facturaId INTEGER,
-                                cantidad  INTEGER, 
-                                descripcion TEXT, 
-                                valor REAL,
-                                subtotal REAL)");
-
-                $insert = "INSERT INTO producto (facturaId, cantidad, descripcion, valor, subtotal) 
-                            VALUES (:facturaId, :cantidad, :descripcion, :valor, :subtotal)";
-                $stmt = $file_db->prepare($insert);
-
-                $stmt->execute([
-                    ':facturaId' => $facturaId,
-                    ':cantidad' => $producto['cantidad'],
-                    ':descripcion' => $producto['descripcion'],
-                    ':valor' => $producto['valor'],
-                    ':subtotal' => $producto['subtotal']
-                ]);
-                
-
-                $lastId = $file_db->lastInsertId();
-                
-                return json_encode($lastId);
-            
-            }	catch(PDOException $e) {
-                //echo $e->getMessage();
-            }
-    }
-
-    public function deleteProduct($id) {
-            try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
-									PDO::ERRMODE_EXCEPTION);
-                $sql = "DELETE FROM producto WHERE id = :id";
-        
-                $stmt = $file_db->prepare($sql);
-                $stmt->execute([':id' => $id]);
-                sleep(2);
-                $result = $stmt->rowCount();
-                return json_encode($result);
-
-            }	catch(PDOException $e) {
-                return null;
-            }
-    }
-
-}
-
-class DisabledHandler {
-    function post($facturaId = null) {
-
-        if($facturaId != null){
-            try {
-                echo $this-> deleteAllProducts($facturaId) ;
-            } catch (Exception $e) {
-            echo "Failed: " . $e->getMessage();
-            }
-        }else{
-            try {
-                echo $this-> deleteAllDisabledData();
-            } catch (Exception $e) {
-            echo "Failed: " . $e->getMessage();
-            }
-        }
-    }
-
-
-    private function selectDisabledFacturas(){
-            try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
-									PDO::ERRMODE_EXCEPTION);
-                $flag = 0;
-                $query = 'SELECT * FROM factura WHERE flag ='.$flag.';';
-                $results = $file_db->query($query);		
-                $data = $results->fetchAll();
-                return json_encode($data);
-            }catch(PDOException $e) {
-                //echo $e->getMessage();
-                return array();
-            }
-        
-}
-        
-    private function deleteDisabledFacturas() {
-            try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
-									PDO::ERRMODE_EXCEPTION);
-                $sql = "DELETE FROM factura WHERE flag = :flag";
-        
-                $stmt = $file_db->prepare($sql);
-                $stmt->execute([':flag' => 0]);
-
-                $result = $stmt->rowCount();
-                return json_encode($result);;
-            }	catch(PDOException $e) {
-                return null;
-            }
-    }
-
-    public function deleteAllDisabledData(){
-            try{
-            $file_db = new PDO('sqlite:facturas.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
-									PDO::ERRMODE_EXCEPTION);
-            $facturas= $this->selectDisabledFacturas();
-
-            foreach($facturas as $f){
-                $this-> deleteAllProducts($f['numero']);
-            }
-
-            $this-> deleteDisabledFacturas();
-            }catch(PDOException $e) {
-                return null;
-            }
-    }
-        
-    public function deleteAllProducts($facturaId) {
-            try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
-									PDO::ERRMODE_EXCEPTION);
-                $sql = "DELETE FROM producto WHERE facturaId = :facturaId ";
-        
-                $stmt = $file_db->prepare($sql);
-                $stmt->execute([':facturaId' => $facturaId]);
-                sleep(2);
-                $result = $stmt->rowCount();
-                return $result;
-            }	catch(PDOException $e) {
-                return null;
-            }
-    }
-
-        
-}
 
 
 Toro::serve(array(
     "/Factura" => "FacturaHandler",
     "/Factura/:alpha" => "FacturaHandler",
-    "/Producto/:alpha" => "ProductoHandler",
-    "/Producto" => "ProductoHandler",
-    "/Disable"  => "DisabledHandler",
-    "/Disable/:alpha"  => "DisabledHandler"
 
+    "/Patient" => "PacienteHandler",
+    "/Patient/:alpha" => "PacienteHandler",
 ));
 
 ?>

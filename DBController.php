@@ -1,5 +1,5 @@
 <?php
-$path_only = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$path_only = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH); 
 $parts = explode('/', $path_only);
 if(count($parts) > 1){
     $last = array_pop($parts);
@@ -14,9 +14,83 @@ if($parts == ''){
  #Constants
 define('_PATHFactura_', $path.'Factura');
 define('_PATHProducto_', $path.'Producto');
-define('_PATHDisable_', $path.'Factura');
+define('_PATHPatient_', $path.'Patient');
 
 class DBController {
+
+
+    public function selectPaciente(){
+        $data = file_get_contents(_PATHPatient_);
+        $json = json_decode($data, true);
+ 
+        return $json;
+    
+    }
+
+    public function selectPacientes($PatientId){
+        $path = _PATHPatient_.'/'.$PatientId;
+        $data = file_get_contents($path);
+        $json = json_decode($data, true);
+
+        return  $json;
+    }
+
+
+    public function insertarPatient($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm){
+        $data = array('PatientId'=>$PatientId,'PatientFirtsNm'=>$PatientFirtsNm,
+              'PatientLastNm'=>$PatientLastNm,'MedicationDescription' => $MedicationDescription,'LastUpdateDtm' => $LastUpdateDtm, 'isUpdate' => false);
+        $path = _PATHPatient_;
+        $options = array(
+            'http' => array(
+            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+            'method'  => 'POST',
+            'content' => http_build_query($data),
+            )
+        );
+
+        $context  = stream_context_create($options);
+        $result = file_get_contents($path, false, $context);
+        $json = json_decode($result, true);
+        return  $json;
+    }
+
+     public function updatePatient($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm){
+      
+        $data = array('PatientId'=>$PatientId,'PatientFirtsNm'=>$PatientFirtsNm,
+              'PatientLastNm'=>$PatientLastNm,'MedicationDescription' => $MedicationDescription,'LastUpdateDtm' => $LastUpdateDtm, 'isUpdate' => true);
+        $path = _PATHPatient_;
+        $options = array(
+            'http' => array(
+            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+            'method'  => 'POST',
+            'content' => http_build_query($data),
+            )
+        );
+
+        $context  = stream_context_create($options);
+        $result = file_get_contents($path, false, $context);
+        $json = json_decode($result, true);
+        return  $json;
+     }
+
+     public function deletePatient($PatientId) {
+        $data = array();
+        $path = _PATHPatient_.'/'.$PatientId;
+        $options = array(
+            'http' => array(
+            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+            'method'  => 'POST',
+            'content' => http_build_query($data),
+            )
+        );
+
+        $context  = stream_context_create($options);
+        $result = file_get_contents($path, false, $context);
+        $json = json_decode($result, true);
+        return  $json;
+     }
+
+    # -----------------------------------------------------
 
     public function selectFacturas(){
         $data = file_get_contents(_PATHFactura_);
