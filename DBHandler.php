@@ -8,6 +8,8 @@ header('Access-Control-Max-Age: 1000');
 header('Content-type: application/json');
 header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token , Authorization');
 
+
+
 class PacienteHandler {
     function get($PatientId = null) {
         if($PatientId != null){
@@ -36,7 +38,7 @@ class PacienteHandler {
             }
          }else{
 
-            if($data['isUpdate'] == "true"){  #quitar las comillas si es raw
+            if($data['isUpdate'] == 'true'){  
                 try {
                   echo $this-> updatePaciente($data['PatientId'], $data['PatientFirtsNm'], $data['PatientLastNm'],  $data['MedicationDescription']);
 
@@ -198,7 +200,7 @@ class EmpleadoHandler {
             }
          }else{
 
-            if($data['isUpdate'] == true){
+            if($data['isUpdate'] == 'true'){
                 try {
                   echo $this-> updateEmpleado($data['EmployeeId'], $data['EmployeeFirtsNm'], $data['EmployeeLastNm'], $data['UserNm'], $data['Password']);
 
@@ -357,7 +359,7 @@ class DrugHandler {
             }
          }else{
 
-            if($data['isUpdate'] == true){
+            if($data['isUpdate'] == 'true'){
                 try {
                   echo $this-> updateDrug($data['DrugId'], $data['DrugNm']);
 
@@ -518,7 +520,7 @@ class ProjectHandler {
             }
          }else{
 
-            if($data['isUpdate'] == true){
+            if($data['isUpdate'] == 'true'){
                 try {
                   echo $this-> updateProject($data['ProjectId'], $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Founds'], $data['Regime'], $data['Report'] );
 
@@ -587,7 +589,8 @@ class ProjectHandler {
                                 INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(3, \"Completo\");
 
                                 CREATE TABLE IF NOT EXISTS Project_x_Employee(
-                                    ProjectId Integer PRIMARY KEY,
+                                    Project_EmployeeId Integer PRIMARY KEY AUTOINCREMENT,
+                                    ProjectId Integer,
                                     EmployeeId Integer,
                                     FOREIGN KEY(ProjectId) REFERENCES Project(ProjectId),
                                     FOREIGN KEY(EmployeeId) REFERENCES Employee(EmployeeId)
@@ -677,6 +680,175 @@ class ProjectHandler {
 
 }
 
+class Project_EmployeeHandler {
+
+    function get($ProjectId = null) { # los empelados de ese proyecto
+        if($ProjectId != null){
+            try {
+                echo $this-> selectProject_Employees($ProjectId);
+            } catch (Exception $e) {
+                echo "Failed: " . $e->getMessage();
+            }
+        }
+
+    }
+
+    function post($ProjectId = null) {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+         if($ProjectId != null){
+            try {
+            echo $this-> deleteProject_Employee($ProjectId);
+            } catch (Exception $e) {
+            echo "Failed: " . $e->getMessage();
+            }
+         }else{
+                try {
+                    echo $this-> insertarProject_Employee(  $data['ProjectId'],  $data['EmployeeId']);
+                } catch (Exception $e) {
+                    echo "Failed: " . $e->getMessage();
+                }
+         }
+    }
+
+     public function selectProject_Employees($ProjectId){ # los proyectos de un colaborador
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
+									PDO::ERRMODE_EXCEPTION);
+                $statement  = $file_db->prepare('SELECT * FROM Project_x_Employee WHERE ProjectId = :ProjectId;');
+                $statement->bindValue(':ProjectId', $ProjectId);
+                $statement->execute();
+                $result = $statement->fetch();
+                return json_encode($result);
+            }catch(PDOException $e) {
+                echo $e->getMessage();
+                return null;
+            }
+    }
+
+
+
+    public function insertarProject_Employee( $ProjectId, $EmployeeId ){
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
+									PDO::ERRMODE_EXCEPTION);
+                // Create tables # problema si employee table no esta
+                $file_db->exec("    CREATE TABLE IF NOT EXISTS Project_x_Employee(
+                                    Project_EmployeeId Integer PRIMARY KEY AUTOINCREMENT,
+                                    ProjectId Integer,
+                                    EmployeeId Integer,
+                                    FOREIGN KEY(ProjectId) REFERENCES Project(ProjectId),
+                                    FOREIGN KEY(EmployeeId) REFERENCES Employee(EmployeeId)
+                                )");
+
+
+                $insert = "INSERT INTO Project_x_Employee ( ProjectId, EmployeeId )
+                            VALUES ( :ProjectId, :EmployeeId )";
+                $stmt = $file_db->prepare($insert);
+
+                // Execute statement
+                $stmt->execute([
+                        ':ProjectId' => $ProjectId,
+                        ':EmployeeId' => $EmployeeId
+                    ]);
+
+                $lastId = $file_db->lastInsertId();
+
+                return json_encode($lastId);
+
+            }
+            catch(PDOException $e) {
+                echo $e->getMessage();
+                return null;
+            }
+    }
+
+
+    public function deleteProject($ProjectId, $EmployeeId) {
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
+									PDO::ERRMODE_EXCEPTION);
+                $sql = "DELETE FROM Project_x_Employee WHERE ProjectId = :ProjectId AND EmployeeId = :EmployeeId";
+
+                $stmt = $file_db->prepare($sql);
+                $stmt->execute([':ProjectId' => $ProjectId,
+                                ':EmployeeId' => $EmployeeId]
+                            );
+
+                $result = $stmt->rowCount();
+                return json_encode($result);;
+            }	catch(PDOException $e) {
+                return null;
+            }
+    }
+
+}
+
+class Director_ProjectsHandler {
+    function get($DirectorId = null) {
+        if($DirectorId != null){
+            try {
+                echo $this-> selectDirector_Projects($DirectorId);
+            } catch (Exception $e) {
+                echo "Failed: " . $e->getMessage();
+            }
+        }
+
+    }
+
+     public function selectDirector_Projects($DirectorId){
+         try {
+             $file_db = new PDO('sqlite:farmacia.sqlite3');
+             $file_db->setAttribute(
+                    PDO::ATTR_ERRMODE,
+                                    PDO::ERRMODE_EXCEPTION
+                );
+             $statement  = $file_db->prepare('SELECT * FROM Project WHERE DirectorId = :DirectorId;');
+             $statement->bindValue(':DirectorId', $DirectorId);
+             $statement->execute();
+             $result = $statement->fetch();
+             return json_encode($result);
+         } catch (PDOException $e) {
+             echo $e->getMessage();
+             return null;
+         }
+     }
+}
+
+class Employee_ProjectsHandler {
+    function get($DirectorId = null) {
+        if($DirectorId != null){
+            try {
+                echo $this-> selectEmployee_Projects($DirectorId);
+            } catch (Exception $e) {
+                echo "Failed: " . $e->getMessage();
+            }
+        }
+
+    }
+
+     public function selectEmployee_Projects($DirectorId){
+         try {
+             $file_db = new PDO('sqlite:farmacia.sqlite3');
+             $file_db->setAttribute(
+                    PDO::ATTR_ERRMODE,
+                                    PDO::ERRMODE_EXCEPTION
+                );
+             $statement  = $file_db->prepare('SELECT * FROM Project WHERE DirectorId = :DirectorId;');
+             $statement->bindValue(':DirectorId', $DirectorId);
+             $statement->execute();
+             $result = $statement->fetch();
+             return json_encode($result);
+         } catch (PDOException $e) {
+             echo $e->getMessage();
+             return null;
+         }
+     }
+}
+
 Toro::serve(array(
     "/Patient" => "PacienteHandler",
     "/Patient/:alpha" => "PacienteHandler",
@@ -689,6 +861,12 @@ Toro::serve(array(
 
     "/Project" => "ProjectHandler",
     "/Project/:alpha" => "ProjectHandler",
+
+    "/Project_Employee" => "Project_EmployeeHandler",
+    "/Project_Employee/:alpha" => "Project_EmployeeHandler",
+
+    "/Director_Projects" => "Director_ProjectsHandler",
+    "/Director_Projects/:alpha" => "Director_ProjectsHandler",
 ));
 
 ?>
