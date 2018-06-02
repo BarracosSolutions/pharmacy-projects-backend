@@ -488,6 +488,194 @@ class DrugHandler {
 
 }
 
+
+class ProjectHandler {
+    function get($ProjectId = null) {
+        if($ProjectId != null){
+            try {
+                echo $this-> selectProject($ProjectId);
+            } catch (Exception $e) {
+                echo "Failed: " . $e->getMessage();
+            }
+        }else{
+            try {
+                echo $this-> selectProjects();
+            } catch (Exception $e) {
+                echo "Failed: " . $e->getMessage();
+            }
+        }
+    }
+
+    function post($ProjectId = null) {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+         if($ProjectId != null){
+            try {
+            echo $this-> deleteProject($ProjectId);
+            } catch (Exception $e) {
+            echo "Failed: " . $e->getMessage();
+            }
+         }else{
+            
+            if($data['isUpdate'] == true){  
+                try {
+                  echo $this-> updateProject($data['ProjectId'], $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Founds'], $data['Regime'], $data['Report'] );
+                
+                } catch (Exception $e) {
+                    echo "Failed: " . $e->getMessage();
+                }
+            } else{
+                try {
+                    echo $this-> insertarProject(  $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Founds'], $data['Regime'], $data['Report'] );
+                } catch (Exception $e) {
+                    echo "Failed: " . $e->getMessage();
+                }
+            }
+         }  
+    }
+
+
+    public  function selectProjects(){
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                $query = 'SELECT * FROM Project;';
+                $results = $file_db->query($query);		
+                $data = $results->fetchAll();	
+                return json_encode($data);
+            }catch(PDOException $e) {
+
+                return array();
+            }
+        
+    }
+
+     public function selectProject($ProjectId){
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                $statement  = $file_db->prepare('SELECT * FROM Project WHERE ProjectId = :ProjectId;');
+                $statement->bindValue(':ProjectId', $EmployeeId);
+                $statement->execute();
+                $result = $statement->fetch();
+                return json_encode($result);
+            }catch(PDOException $e) {
+                echo $e->getMessage();
+                return null;
+            }
+    }
+
+  
+
+    public function insertarProject( $ProjectStatusId, $PatientId, $DrugId, $DirectorId, $Founds, $Regime, $Report){
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                // Create tables # problema si employee table no esta 
+                $file_db->exec("CREATE TABLE IF NOT EXISTS ProjectStatus(
+                                    ProjectStatusId Integer PRIMARY KEY,
+                                    StatusNm TEXT,
+                                    LastUpdateDtm TEXT
+                                );
+
+                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(1, \"Pendiente\");
+                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(2, \"En Proceso\");
+                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(3, \"Completo\");
+
+                                CREATE TABLE IF NOT EXISTS Project_x_Employee(
+                                    ProjectId Integer PRIMARY KEY,
+                                    EmployeeId Integer,
+                                    FOREIGN KEY(ProjectId) REFERENCES Project(ProjectId),
+                                    FOREIGN KEY(EmployeeId) REFERENCES Employee(EmployeeId)
+                                );
+
+                                
+                                CREATE TABLE IF NOT EXISTS Project (
+                                ProjectId INTEGER PRIMARY KEY AUTOINCREMENT, 
+                                ProjectStatusId  INTEGER, 
+                                PatientId INTEGER,
+                                DrugId INTEGER,
+                                DirectorId INTEGER,
+                                Founds TEXT,
+                                Regime TEXT,
+                                Report TEXT,
+                                LastUpdateDtm TEXT,
+                                FOREIGN KEY(ProjectStatusId) REFERENCES ProjectStatus(ProjectStatusId),
+                                FOREIGN KEY(PatientId) REFERENCES Patient(PatientId),
+                                FOREIGN KEY(DrugId) REFERENCES Drug(DrugId),
+                                FOREIGN KEY(DirectorId) REFERENCES Employee(EmployeeId)
+                                )");
+                    
+                
+                $insert = "INSERT INTO Project ( ProjectStatusId, PatientId, DrugId, DirectorId, Founds, Regime, Report, LastUpdateDtm ) 
+                            VALUES ( :ProjectStatusId, :PatientId, :DrugId, :DirectorId, :Founds, :Regime, :Report, :LastUpdateDtm)";
+                $stmt = $file_db->prepare($insert);
+            
+                // Execute statement
+                $stmt->execute([
+                        ':ProjectStatusId' => $ProjectStatusId,
+                        ':PatientId' => $PatientId,
+                        ':DrugId' => $DrugId,
+                        ':DirectorId' => $DirectorId,
+                        ':Founds' => $Founds,
+                        ':Regime' => $Regime,
+                        ':Report' => $Report,
+                        ':LastUpdateDtm' => date("D M d, Y G:i")
+                    ]);
+                
+                $lastId = $file_db->lastInsertId();
+                
+                return json_encode($lastId);
+            
+            }
+            catch(PDOException $e) {
+                echo $e->getMessage();
+                return null;
+            }
+    }
+
+    public function updateProject($ProjectId, $ProjectStatusId, $PatientId, $DrugId, $DirectorId, $Founds, $Regime, $Report) {
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                $flag = 1;
+
+                $sql = 'UPDATE Project SET ProjectStatusId = "'.$ProjectStatusId.'" , PatientId = "'.$PatientId.'", DrugId = "'.$DrugId.'", DirectorId = "'.$DirectorId.'", Founds = "'.$Founds.'",
+                 Regime = "'.$Regime.'", Report = "'.$Report.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE ProjectId = ' .$ProjectId.';';
+            
+                $result = $file_db->exec($sql);
+                
+                return json_encode($result);
+
+            }	catch(PDOException $e) {
+                echo $e->getMessage();
+                return null;
+            }
+    }
+
+    public function deleteProject($ProjectId) {
+            try{
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+									PDO::ERRMODE_EXCEPTION);
+                $sql = "DELETE FROM Project WHERE ProjectId = :ProjectId";
+        
+                $stmt = $file_db->prepare($sql);
+                $stmt->execute([':ProjectId' => $ProjectId]);
+
+                $result = $stmt->rowCount();
+                return json_encode($result);;
+            }	catch(PDOException $e) {
+                return null;
+            }
+    }
+
+}
+
 Toro::serve(array(
     "/Patient" => "PacienteHandler",
     "/Patient/:alpha" => "PacienteHandler",
@@ -497,6 +685,9 @@ Toro::serve(array(
 
     "/Drug" => "DrugHandler",
     "/Drug/:alpha" => "DrugHandler",
+
+    "/Project" => "ProjectHandler",
+    "/Project/:alpha" => "ProjectHandler",
 ));
 
 ?>
