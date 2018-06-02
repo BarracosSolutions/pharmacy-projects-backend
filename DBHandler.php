@@ -169,116 +169,122 @@ class PacienteHandler {
 
 }
 
-class FacturaHandler {
-    function get($numero = null) {
-        if($numero != null){
+class EmpleadoHandler {
+    function get($EmployeeId = null) {
+        if($EmployeeId != null){
             try {
-                echo $this-> selectFactura($numero);
+                echo $this-> selectEmpleado($EmployeeId);
             } catch (Exception $e) {
                 echo "Failed: " . $e->getMessage();
             }
         }else{
             try {
-                echo $this-> selectFacturas();
+                echo $this-> selectEmpleados();
             } catch (Exception $e) {
                 echo "Failed: " . $e->getMessage();
             }
         }
     }
 
-    function post($numero = null) {
-         if($numero != null){
+    function post($EmployeeId = null) {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+         if($EmployeeId != null){
             try {
-            echo $this-> deleteFactura($numero);
+            echo $this-> deleteEmpleado($EmployeeId);
             } catch (Exception $e) {
             echo "Failed: " . $e->getMessage();
             }
          }else{
-            if($_POST['isUpdate'] == true){
+            
+            if($data['isUpdate'] == true){  
                 try {
-                    echo $this-> updateFactura($_POST['numero'], $_POST['fecha'], $_POST['cliente'],  $_POST['impuestos'],  $_POST['total']);
+                  echo $this-> updateEmpleado($data['EmployeeId'], $data['EmployeeFirtsNm'], $data['EmployeeLastNm'], $data['UserNm'], $data['Password'], $data['CreateDtm'],  $data['LastUpdateDtm']);
+                
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
             } else{
                 try {
-                    echo $this-> insertarFactura($_POST['numero'], $_POST['fecha'], $_POST['cliente'],  $_POST['impuestos'],  $_POST['total']);
+                    echo $this-> insertarEmpleado( $data['EmployeeFirtsNm'], $data['EmployeeLastNm'], $data['UserNm'],$data['Password'], $data['CreateDtm'],  $data['LastUpdateDtm']);
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
             }
-         }
+         }  
     }
 
     function put() {
         try {
-           echo $this-> updateFactura($_PUT['numero'], $_PUT['fecha'], $_PUT['cliente'],  $_PUT['impuestos'],  $_PUT['total']);
+           echo $this-> updateEmpleado($data['EmployeeId'], $data['EmployeeFirtsNm'], $data['EmployeeLastNm'], $data['UserNm'],$data['Password'], $data['CreateDtm'],  $data['LastUpdateDtm']);
         } catch (Exception $e) {
           echo "Failed: " . $e->getMessage();
         }
     }
 
-    public  function selectFacturas(){
+    public  function selectEmpleados(){
             try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
 									PDO::ERRMODE_EXCEPTION);
-                $flag = 1;
-                $query = 'SELECT * FROM factura WHERE flag ='.$flag.';';
+                $query = 'SELECT * FROM Employee;';
                 $results = $file_db->query($query);		
                 $data = $results->fetchAll();	
                 return json_encode($data);
             }catch(PDOException $e) {
-                //echo $e->getMessage();
+
                 return array();
             }
         
     }
 
-     public function selectFactura($numero){
+     public function selectEmpleado($EmployeeId){
             try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
 									PDO::ERRMODE_EXCEPTION);
-                $statement  = $file_db->prepare('SELECT * FROM factura WHERE numero = :numero;');
-                $statement->bindValue(':numero', $numero);
+                $statement  = $file_db->prepare('SELECT * FROM Employee WHERE EmployeeId = :EmployeeId;');
+                $statement->bindValue(':EmployeeId', $EmployeeId);
                 $statement->execute();
                 sleep(2);
                 $result = $statement->fetch();
                 return json_encode($result);
             }catch(PDOException $e) {
-                //echo $e->getMessage();
+                echo $e->getMessage();
                 return null;
             }
     }
 
-    public function insertarFactura($numero, $fecha, $cliente,  $impuestos, $total){
+
+    public function insertarEmpleado( $EmployeeFirtsNm, $EmployeeLastNm, $UserNm, $Password, $CreateDtm, $LastUpdateDtm){
             try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
 									PDO::ERRMODE_EXCEPTION);
-                // Create tables
-                $file_db->exec("CREATE TABLE IF NOT EXISTS factura (
-                                numero INTEGER PRIMARY KEY, 
-                                fecha  TEXT, 
-                                cliente TEXT, 
-                                impuestos REAL,
-                                total REAL,
-                                flag INTEGER)");
+                // Create tables  #autoincremental
+                $file_db->exec("CREATE TABLE IF NOT EXISTS Employee (
+                                EmployeeId INTEGER PRIMARY KEY AUTOINCREMENT, 
+                                EmployeeFirtsNm  TEXT, 
+                                EmployeeLastNm TEXT,
+                                UserNm TEXT,
+                                _Password TEXT,
+                                CreateDtm TEXT,
+                                LastUpdateDtm TEXT 
+                                )");
                     
                 
-                $insert = "INSERT INTO factura (numero, fecha, cliente,impuestos,total,flag) 
-                            VALUES (:numero, :fecha, :cliente,:impuestos,:total, :flag)";
+                $insert = "INSERT INTO Employee ( EmployeeFirtsNm, EmployeeLastNm, UserNm, _Password, CreateDtm, LastUpdateDtm) 
+                            VALUES ( :EmployeeFirtsNm, :EmployeeLastNm, :UserNm, :_Password, :CreateDtm, :LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
             
                 // Execute statement
                 $stmt->execute([
-                        ':numero' => $numero,
-                        ':fecha' => $fecha,
-                        ':cliente' => $cliente,
-                        ':impuestos' => $impuestos,
-                        ':total' => $total,
-                        ':flag' => 0
+                        ':EmployeeFirtsNm' => $EmployeeFirtsNm,
+                        ':EmployeeLastNm' => $EmployeeLastNm,
+                        ':UserNm' => $UserNm,
+                        ':_Password' => $Password,
+                        ':CreateDtm' => $CreateDtm,
+                        ':LastUpdateDtm' => $LastUpdateDtm
                     ]);
                 
                 $lastId = $file_db->lastInsertId();
@@ -292,17 +298,16 @@ class FacturaHandler {
             }
     }
 
-    public function updateFactura($numero, $fecha, $cliente,  $impuestos, $total) {
+    public function updateEmpleado($EmployeeId, $EmployeeFirtsNm, $EmployeeLastNm, $UserNm, $Password, $CreateDtm, $LastUpdateDtm) {
             try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
-                $sql = 'UPDATE factura SET fecha = "'.$fecha.'" , cliente = "'.$cliente.'", impuestos = '.$impuestos.', total = '.$total.', flag = '.$flag.' WHERE numero = ' .$numero.';';
+                $sql = 'UPDATE Employee SET EmployeeFirtsNm = "'.$EmployeeFirtsNm.'" , EmployeeLastNm = "'.$EmployeeLastNm.'", UserNm = "'.$UserNm.'", _Password = "'.$Password.'", CreateDtm = "'.$CreateDtm.'", LastUpdateDtm = "'.$LastUpdateDtm.'" WHERE EmployeeId = ' .$EmployeeId.';';
             
                 $result = $file_db->exec($sql);
-                sleep(2);
                 
                 return json_encode($result);
 
@@ -312,15 +317,15 @@ class FacturaHandler {
             }
     }
 
-    public function deleteFactura($numero) {
+    public function deleteEmpleado($EmployeeId) {
             try{
-                $file_db = new PDO('sqlite:facturas.sqlite3');
+                $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
 									PDO::ERRMODE_EXCEPTION);
-                $sql = "DELETE FROM factura WHERE numero = :numero";
+                $sql = "DELETE FROM Employee WHERE EmployeeId = :EmployeeId";
         
                 $stmt = $file_db->prepare($sql);
-                $stmt->execute([':numero' => $numero]);
+                $stmt->execute([':EmployeeId' => $EmployeeId]);
 
                 $result = $stmt->rowCount();
                 return json_encode($result);;
@@ -334,8 +339,8 @@ class FacturaHandler {
 
 
 Toro::serve(array(
-    "/Factura" => "FacturaHandler",
-    "/Factura/:alpha" => "FacturaHandler",
+    "/Employee" => "EmpleadoHandler",
+    "/Employee/:alpha" => "EmpleadoHandler",
 
     "/Patient" => "PacienteHandler",
     "/Patient/:alpha" => "PacienteHandler",
