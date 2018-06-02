@@ -25,6 +25,8 @@ class PacienteHandler {
     }
 
     function post($PatientId = null) {
+        $data = json_decode(file_get_contents('php://input'), true);
+
          if($PatientId != null){
             try {
             echo $this-> deletePaciente($PatientId);
@@ -32,21 +34,22 @@ class PacienteHandler {
             echo "Failed: " . $e->getMessage();
             }
          }else{
-            if($_POST['isUpdate'] == 'true'){  #quitar las comillas si es raw
+            
+            if($data['isUpdate'] == true){  #quitar las comillas si es raw
                 try {
-                  echo $this-> updatePaciente($_POST['PatientId'], $_POST['PatientFirtsNm'], $_POST['PatientLastNm'],  $_POST['MedicationDescription'],  $_POST['LastUpdateDtm']);
+                  echo $this-> updatePaciente($data['PatientId'], $data['PatientFirtsNm'], $data['PatientLastNm'],  $data['MedicationDescription'],  $data['LastUpdateDtm']);
                 
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
             } else{
                 try {
-                    echo $this-> insertarPaciente($_POST['PatientId'], $_POST['PatientFirtsNm'], $_POST['PatientLastNm'],  $_POST['MedicationDescription'],  $_POST['LastUpdateDtm']);
+                    echo $this-> insertarPaciente( $data['PatientFirtsNm'], $data['PatientLastNm'],  $data['MedicationDescription'],  $data['LastUpdateDtm']);
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
             }
-         }
+         }  
     }
 
     function put() {
@@ -91,27 +94,26 @@ class PacienteHandler {
             }
     }
 
-    public function insertarPaciente($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm){
+    public function insertarPaciente( $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
 									PDO::ERRMODE_EXCEPTION);
                 // Create tables  #autoincremental
                 $file_db->exec("CREATE TABLE IF NOT EXISTS patient (
-                                PatientId INTEGER PRIMARY KEY, 
+                                PatientId INTEGER PRIMARY KEY AUTOINCREMENT, 
                                 PatientFirtsNm  TEXT, 
                                 PatientLastNm TEXT, 
                                 MedicationDescription TEXT,
                                 LastUpdateDtm TEXT )");
                     
                 
-                $insert = "INSERT INTO patient (PatientId, PatientFirtsNm, PatientLastNm,MedicationDescription,LastUpdateDtm) 
-                            VALUES (:PatientId, :PatientFirtsNm, :PatientLastNm,:MedicationDescription,:LastUpdateDtm)";
+                $insert = "INSERT INTO patient ( PatientFirtsNm, PatientLastNm,MedicationDescription,LastUpdateDtm) 
+                            VALUES ( :PatientFirtsNm, :PatientLastNm,:MedicationDescription,:LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
             
                 // Execute statement
                 $stmt->execute([
-                        ':PatientId' => $PatientId,
                         ':PatientFirtsNm' => $PatientFirtsNm,
                         ':PatientLastNm' => $PatientLastNm,
                         ':MedicationDescription' => $MedicationDescription,
@@ -124,7 +126,7 @@ class PacienteHandler {
             
             }
             catch(PDOException $e) {
-                echo "insert";#$e->getMessage();
+                echo $e->getMessage();
                 return null;
             }
     }

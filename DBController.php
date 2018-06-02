@@ -35,14 +35,14 @@ class DBController {
         return  $json;
     }
 
-
-    public function insertarPatient($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm){
+/*
+    public function insertarPatiente($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm){
         $data = array('PatientId'=>$PatientId,'PatientFirtsNm'=>$PatientFirtsNm,
               'PatientLastNm'=>$PatientLastNm,'MedicationDescription' => $MedicationDescription,'LastUpdateDtm' => $LastUpdateDtm, 'isUpdate' => false);
         $path = _PATHPatient_;
         $options = array(
             'http' => array(
-            'header'  => "Content-type: application/x-www-form-urlencoded\r\n",
+            'header'  => "Content-type: application/json\r\n",
             'method'  => 'POST',
             'content' => http_build_query($data),
             )
@@ -53,7 +53,7 @@ class DBController {
         $json = json_decode($result, true);
         return  $json;
     }
-
+*/
      public function updatePatient($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription, $LastUpdateDtm){
       
         $data = array('PatientId'=>$PatientId,'PatientFirtsNm'=>$PatientFirtsNm,
