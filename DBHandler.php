@@ -198,7 +198,7 @@ class EmpleadoHandler {
             }
          }else{
 
-            if($data['isUpdate'] == true){
+            if($data['isUpdate'] == "true"){
                 try {
                   echo $this-> updateEmpleado($data['EmployeeId'], $data['EmployeeFirtsNm'], $data['EmployeeLastNm'], $data['UserNm'], $data['Password']);
 
@@ -357,7 +357,7 @@ class DrugHandler {
             }
          }else{
 
-            if($data['isUpdate'] == true){
+            if($data['isUpdate'] == "true"){
                 try {
                   echo $this-> updateDrug($data['DrugId'], $data['DrugNm']);
 
@@ -518,7 +518,7 @@ class ProjectHandler {
             }
          }else{
 
-            if($data['isUpdate'] == true){
+            if($data['isUpdate'] == "true"){
                 try {
                   echo $this-> updateProject($data['ProjectId'], $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Founds'], $data['Regime'], $data['Report'] );
 
