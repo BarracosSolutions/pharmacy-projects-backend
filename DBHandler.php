@@ -1,10 +1,11 @@
 <?php
 
-require("Toro.php"); 
-header('Access-Control-Allow-Origin: *'); 
+require("Toro.php");
+header('Access-Control-Allow-Origin: *');
 header("Access-Control-Allow-Credentials: true");
 header('Access-Control-Allow-Methods: GET, PUT, POST, DELETE, OPTIONS');
 header('Access-Control-Max-Age: 1000');
+header('Content-type: application/json');
 header('Access-Control-Allow-Headers: Origin, Content-Type, X-Auth-Token , Authorization');
 
 class PacienteHandler {
@@ -34,11 +35,11 @@ class PacienteHandler {
             echo "Failed: " . $e->getMessage();
             }
          }else{
-            
-            if($data['isUpdate'] == true){  #quitar las comillas si es raw
+
+            if($data['isUpdate'] == "true"){  #quitar las comillas si es raw
                 try {
                   echo $this-> updatePaciente($data['PatientId'], $data['PatientFirtsNm'], $data['PatientLastNm'],  $data['MedicationDescription']);
-                
+
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
@@ -49,7 +50,7 @@ class PacienteHandler {
                     echo "Failed: " . $e->getMessage();
                 }
             }
-         }  
+         }
     }
 
     function put() {
@@ -63,24 +64,24 @@ class PacienteHandler {
     public  function selectPacientes(){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
                 $query = 'SELECT * FROM patient;'; # WHERE flag = '.$flag.';';
-                $results = $file_db->query($query);		
-                $data = $results->fetchAll();	
+                $results = $file_db->query($query);
+                $data = $results->fetchAll();
                 return json_encode($data);
             }catch(PDOException $e) {
                 //echo $e->getMessage();
                 return array();
             }
-        
+
     }
 
      public function selectPaciente($PatientId){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $statement  = $file_db->prepare('SELECT * FROM patient WHERE PacientId = :PatientId;');
                 $statement->bindValue(':PatientId', $PatientId);
@@ -97,21 +98,21 @@ class PacienteHandler {
     public function insertarPaciente( $PatientFirtsNm, $PatientLastNm,  $MedicationDescription){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 // Create tables  #autoincremental
                 $file_db->exec("CREATE TABLE IF NOT EXISTS patient (
-                                PatientId INTEGER PRIMARY KEY AUTOINCREMENT, 
-                                PatientFirtsNm  TEXT, 
-                                PatientLastNm TEXT, 
+                                PatientId INTEGER PRIMARY KEY AUTOINCREMENT,
+                                PatientFirtsNm  TEXT,
+                                PatientLastNm TEXT,
                                 MedicationDescription TEXT,
                                 LastUpdateDtm TEXT )");
-                    
-                
-                $insert = "INSERT INTO patient ( PatientFirtsNm, PatientLastNm,MedicationDescription,LastUpdateDtm) 
+
+
+                $insert = "INSERT INTO patient ( PatientFirtsNm, PatientLastNm,MedicationDescription,LastUpdateDtm)
                             VALUES ( :PatientFirtsNm, :PatientLastNm,:MedicationDescription,:LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
-            
+
                 // Execute statement
                 $stmt->execute([
                         ':PatientFirtsNm' => $PatientFirtsNm,
@@ -119,11 +120,11 @@ class PacienteHandler {
                         ':MedicationDescription' => $MedicationDescription,
                         ':LastUpdateDtm' => date("D M d, Y G:i")
                     ]);
-                
+
                 $lastId = $file_db->lastInsertId();
-                
+
                 return json_encode($lastId);
-            
+
             }
             catch(PDOException $e) {
                 echo $e->getMessage();
@@ -134,14 +135,14 @@ class PacienteHandler {
     public function updatePaciente($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
                 $sql = 'UPDATE patient SET PatientFirtsNm = "'.$PatientFirtsNm.'" , PatientLastNm = "'.$PatientLastNm.'", MedicationDescription = "'.$MedicationDescription.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE PatientId = ' .$PatientId.';';
-            
+
                 $result = $file_db->exec($sql);
-                
+
                 return json_encode($result);
 
             }	catch(PDOException $e) {
@@ -153,10 +154,10 @@ class PacienteHandler {
     public function deletePaciente($PatientId) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $sql = "DELETE FROM patient WHERE PatientId = :PatientId";
-        
+
                 $stmt = $file_db->prepare($sql);
                 $stmt->execute([':PatientId' => $PatientId]);
 
@@ -196,11 +197,11 @@ class EmpleadoHandler {
             echo "Failed: " . $e->getMessage();
             }
          }else{
-            
-            if($data['isUpdate'] == true){  
+
+            if($data['isUpdate'] == true){
                 try {
                   echo $this-> updateEmpleado($data['EmployeeId'], $data['EmployeeFirtsNm'], $data['EmployeeLastNm'], $data['UserNm'], $data['Password']);
-                
+
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
@@ -211,30 +212,30 @@ class EmpleadoHandler {
                     echo "Failed: " . $e->getMessage();
                 }
             }
-         }  
+         }
     }
 
 
     public  function selectEmpleados(){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $query = 'SELECT * FROM Employee;';
-                $results = $file_db->query($query);		
-                $data = $results->fetchAll();	
+                $results = $file_db->query($query);
+                $data = $results->fetchAll();
                 return json_encode($data);
             }catch(PDOException $e) {
 
                 return array();
             }
-        
+
     }
 
      public function selectEmpleado($EmployeeId){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $statement  = $file_db->prepare('SELECT * FROM Employee WHERE EmployeeId = :EmployeeId;');
                 $statement->bindValue(':EmployeeId', $EmployeeId);
@@ -251,24 +252,24 @@ class EmpleadoHandler {
     public function insertarEmpleado( $EmployeeFirtsNm, $EmployeeLastNm, $UserNm, $Password){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 // Create tables  #autoincremental
                 $file_db->exec("CREATE TABLE IF NOT EXISTS Employee (
-                                EmployeeId INTEGER PRIMARY KEY AUTOINCREMENT, 
-                                EmployeeFirtsNm  TEXT, 
+                                EmployeeId INTEGER PRIMARY KEY AUTOINCREMENT,
+                                EmployeeFirtsNm  TEXT,
                                 EmployeeLastNm TEXT,
                                 UserNm TEXT,
                                 _Password TEXT,
                                 CreateDtm TEXT,
-                                LastUpdateDtm TEXT 
+                                LastUpdateDtm TEXT
                                 )");
-                    
-                
-                $insert = "INSERT INTO Employee ( EmployeeFirtsNm, EmployeeLastNm, UserNm, _Password, CreateDtm, LastUpdateDtm) 
+
+
+                $insert = "INSERT INTO Employee ( EmployeeFirtsNm, EmployeeLastNm, UserNm, _Password, CreateDtm, LastUpdateDtm)
                             VALUES ( :EmployeeFirtsNm, :EmployeeLastNm, :UserNm, :_Password, :CreateDtm, :LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
-            
+
                 // Execute statement
                 $stmt->execute([
                         ':EmployeeFirtsNm' => $EmployeeFirtsNm,
@@ -278,11 +279,11 @@ class EmpleadoHandler {
                         ':CreateDtm' => date("D M d, Y G:i"),
                         ':LastUpdateDtm' => date("D M d, Y G:i")
                     ]);
-                
+
                 $lastId = $file_db->lastInsertId();
-                
+
                 return json_encode($lastId);
-            
+
             }
             catch(PDOException $e) {
                 echo $e->getMessage();
@@ -293,14 +294,14 @@ class EmpleadoHandler {
     public function updateEmpleado($EmployeeId, $EmployeeFirtsNm, $EmployeeLastNm, $UserNm, $Password) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
                 $sql = 'UPDATE Employee SET EmployeeFirtsNm = "'.$EmployeeFirtsNm.'" , EmployeeLastNm = "'.$EmployeeLastNm.'", UserNm = "'.$UserNm.'", _Password = "'.$Password.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE EmployeeId = ' .$EmployeeId.';';
-            
+
                 $result = $file_db->exec($sql);
-                
+
                 return json_encode($result);
 
             }	catch(PDOException $e) {
@@ -312,10 +313,10 @@ class EmpleadoHandler {
     public function deleteEmpleado($EmployeeId) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $sql = "DELETE FROM Employee WHERE EmployeeId = :EmployeeId";
-        
+
                 $stmt = $file_db->prepare($sql);
                 $stmt->execute([':EmployeeId' => $EmployeeId]);
 
@@ -355,11 +356,11 @@ class DrugHandler {
             echo "Failed: " . $e->getMessage();
             }
          }else{
-            
-            if($data['isUpdate'] == true){  
+
+            if($data['isUpdate'] == true){
                 try {
                   echo $this-> updateDrug($data['DrugId'], $data['DrugNm']);
-                
+
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
@@ -370,7 +371,7 @@ class DrugHandler {
                     echo "Failed: " . $e->getMessage();
                 }
             }
-         }  
+         }
     }
 
     function put() {
@@ -384,23 +385,23 @@ class DrugHandler {
     public  function selectDrugs(){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $query = 'SELECT * FROM Drug;';
-                $results = $file_db->query($query);		
-                $data = $results->fetchAll();	
+                $results = $file_db->query($query);
+                $data = $results->fetchAll();
                 return json_encode($data);
             }catch(PDOException $e) {
 
                 return array();
             }
-        
+
     }
 
      public function selectDrug($DrugId){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $statement  = $file_db->prepare('SELECT * FROM Drug WHERE DrugId = :DrugId;');
                 $statement->bindValue(':DrugId', $DrugId);
@@ -417,32 +418,32 @@ class DrugHandler {
     public function insertarDrug( $DrugNm){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 // Create tables  #autoincremental
                 $file_db->exec("CREATE TABLE IF NOT EXISTS Drug (
-                                DrugId INTEGER PRIMARY KEY AUTOINCREMENT, 
-                                DrugNm  TEXT, 
+                                DrugId INTEGER PRIMARY KEY AUTOINCREMENT,
+                                DrugNm  TEXT,
                                 CreateDtm TEXT,
-                                LastUpdateDtm TEXT 
+                                LastUpdateDtm TEXT
                                 )");
-                    
-                
-                $insert = "INSERT INTO Drug ( DrugNm,  CreateDtm, LastUpdateDtm) 
+
+
+                $insert = "INSERT INTO Drug ( DrugNm,  CreateDtm, LastUpdateDtm)
                             VALUES ( :DrugNm, :CreateDtm, :LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
-            
+
                 // Execute statement
                 $stmt->execute([
                         ':DrugNm' => $DrugNm,
                         ':CreateDtm' => date("D M d, Y G:i"),
                         ':LastUpdateDtm' => date("D M d, Y G:i")
                     ]);
-                
+
                 $lastId = $file_db->lastInsertId();
-                
+
                 return json_encode($lastId);
-            
+
             }
             catch(PDOException $e) {
                 echo $e->getMessage();
@@ -453,14 +454,14 @@ class DrugHandler {
     public function updateDrug($DrugId, $DrugNm) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
                 $sql = 'UPDATE Drug SET DrugNm = "'.$DrugNm.'" , LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE DrugId = ' .$DrugId.';';
-            
+
                 $result = $file_db->exec($sql);
-                
+
                 return json_encode($result);
 
             }	catch(PDOException $e) {
@@ -472,10 +473,10 @@ class DrugHandler {
     public function deleteDrug($DrugId) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $sql = "DELETE FROM Drug WHERE DrugId = :DrugId";
-        
+
                 $stmt = $file_db->prepare($sql);
                 $stmt->execute([':DrugId' => $DrugId]);
 
@@ -516,11 +517,11 @@ class ProjectHandler {
             echo "Failed: " . $e->getMessage();
             }
          }else{
-            
-            if($data['isUpdate'] == true){  
+
+            if($data['isUpdate'] == true){
                 try {
                   echo $this-> updateProject($data['ProjectId'], $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Founds'], $data['Regime'], $data['Report'] );
-                
+
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
@@ -531,30 +532,30 @@ class ProjectHandler {
                     echo "Failed: " . $e->getMessage();
                 }
             }
-         }  
+         }
     }
 
 
     public  function selectProjects(){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $query = 'SELECT * FROM Project;';
-                $results = $file_db->query($query);		
-                $data = $results->fetchAll();	
+                $results = $file_db->query($query);
+                $data = $results->fetchAll();
                 return json_encode($data);
             }catch(PDOException $e) {
 
                 return array();
             }
-        
+
     }
 
      public function selectProject($ProjectId){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $statement  = $file_db->prepare('SELECT * FROM Project WHERE ProjectId = :ProjectId;');
                 $statement->bindValue(':ProjectId', $EmployeeId);
@@ -567,14 +568,14 @@ class ProjectHandler {
             }
     }
 
-  
+
 
     public function insertarProject( $ProjectStatusId, $PatientId, $DrugId, $DirectorId, $Founds, $Regime, $Report){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
-                // Create tables # problema si employee table no esta 
+                // Create tables # problema si employee table no esta
                 $file_db->exec("CREATE TABLE IF NOT EXISTS ProjectStatus(
                                     ProjectStatusId Integer PRIMARY KEY,
                                     StatusNm TEXT,
@@ -592,10 +593,10 @@ class ProjectHandler {
                                     FOREIGN KEY(EmployeeId) REFERENCES Employee(EmployeeId)
                                 );
 
-                                
+
                                 CREATE TABLE IF NOT EXISTS Project (
-                                ProjectId INTEGER PRIMARY KEY AUTOINCREMENT, 
-                                ProjectStatusId  INTEGER, 
+                                ProjectId INTEGER PRIMARY KEY AUTOINCREMENT,
+                                ProjectStatusId  INTEGER,
                                 PatientId INTEGER,
                                 DrugId INTEGER,
                                 DirectorId INTEGER,
@@ -608,12 +609,12 @@ class ProjectHandler {
                                 FOREIGN KEY(DrugId) REFERENCES Drug(DrugId),
                                 FOREIGN KEY(DirectorId) REFERENCES Employee(EmployeeId)
                                 )");
-                    
-                
-                $insert = "INSERT INTO Project ( ProjectStatusId, PatientId, DrugId, DirectorId, Founds, Regime, Report, LastUpdateDtm ) 
+
+
+                $insert = "INSERT INTO Project ( ProjectStatusId, PatientId, DrugId, DirectorId, Founds, Regime, Report, LastUpdateDtm )
                             VALUES ( :ProjectStatusId, :PatientId, :DrugId, :DirectorId, :Founds, :Regime, :Report, :LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
-            
+
                 // Execute statement
                 $stmt->execute([
                         ':ProjectStatusId' => $ProjectStatusId,
@@ -625,11 +626,11 @@ class ProjectHandler {
                         ':Report' => $Report,
                         ':LastUpdateDtm' => date("D M d, Y G:i")
                     ]);
-                
+
                 $lastId = $file_db->lastInsertId();
-                
+
                 return json_encode($lastId);
-            
+
             }
             catch(PDOException $e) {
                 echo $e->getMessage();
@@ -640,15 +641,15 @@ class ProjectHandler {
     public function updateProject($ProjectId, $ProjectStatusId, $PatientId, $DrugId, $DirectorId, $Founds, $Regime, $Report) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
                 $sql = 'UPDATE Project SET ProjectStatusId = "'.$ProjectStatusId.'" , PatientId = "'.$PatientId.'", DrugId = "'.$DrugId.'", DirectorId = "'.$DirectorId.'", Founds = "'.$Founds.'",
                  Regime = "'.$Regime.'", Report = "'.$Report.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE ProjectId = ' .$ProjectId.';';
-            
+
                 $result = $file_db->exec($sql);
-                
+
                 return json_encode($result);
 
             }	catch(PDOException $e) {
@@ -660,10 +661,10 @@ class ProjectHandler {
     public function deleteProject($ProjectId) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE, 
+		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $sql = "DELETE FROM Project WHERE ProjectId = :ProjectId";
-        
+
                 $stmt = $file_db->prepare($sql);
                 $stmt->execute([':ProjectId' => $ProjectId]);
 
