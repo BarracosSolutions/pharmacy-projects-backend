@@ -38,16 +38,16 @@ class PacienteHandler {
             }
          }else{
 
-            if($data['isUpdate'] == 'true'){  
+            if($data['isUpdate'] == 'true'){
                 try {
-                  echo $this-> updatePaciente($data['PatientId'], $data['PatientFirtsNm'], $data['PatientLastNm'],  $data['MedicationDescription']);
+                  echo $this-> updatePaciente($data['PatientId'], $data['NationalId'], $data['PatientFirstNm'], $data['PatientLastNm'],  $data['MedicationDescription']);
 
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
             } else{
                 try {
-                    echo $this-> insertarPaciente( $data['PatientFirtsNm'], $data['PatientLastNm'],  $data['MedicationDescription']);
+                    echo $this-> insertarPaciente( $data['NationalId'],$data['PatientFirstNm'], $data['PatientLastNm'],  $data['MedicationDescription']);
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
@@ -57,7 +57,7 @@ class PacienteHandler {
 
     function put() {
         try {
-           echo $this-> updatePaciente($_POST['PatientId'], $_POST['PatientFirtsNm'], $_POST['PatientLastNm'],  $_POST['MedicationDescription']);
+           echo $this-> updatePaciente($_POST['PatientId'], $_POST['NationalId'],$_POST['PatientFirstNm'], $_POST['PatientLastNm'],  $_POST['MedicationDescription']);
         } catch (Exception $e) {
           echo "Failed: " . $e->getMessage();
         }
@@ -97,27 +97,28 @@ class PacienteHandler {
             }
     }
 
-    public function insertarPaciente( $PatientFirtsNm, $PatientLastNm,  $MedicationDescription){
+    public function insertarPaciente($NationalId, $PatientFirstNm, $PatientLastNm,  $MedicationDescription){
             try{
-                $file_db = new PDO('sqlite:farmacia.sqlite3');
-		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
-									PDO::ERRMODE_EXCEPTION);
+                  $file_db = new PDO('sqlite:farmacia.sqlite3');
+		              $file_db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
                 // Create tables  #autoincremental
                 $file_db->exec("CREATE TABLE IF NOT EXISTS patient (
                                 PatientId INTEGER PRIMARY KEY AUTOINCREMENT,
-                                PatientFirtsNm  TEXT,
+                                NationalId TEXT,
+                                PatientFirstNm  TEXT,
                                 PatientLastNm TEXT,
                                 MedicationDescription TEXT,
                                 LastUpdateDtm TEXT )");
 
 
-                $insert = "INSERT INTO patient ( PatientFirtsNm, PatientLastNm,MedicationDescription,LastUpdateDtm)
-                            VALUES ( :PatientFirtsNm, :PatientLastNm,:MedicationDescription,:LastUpdateDtm)";
+                $insert = "INSERT INTO patient (NationalId, PatientFirstNm, PatientLastNm,MedicationDescription,LastUpdateDtm)
+                            VALUES (:NationalId, :PatientFirstNm, :PatientLastNm,:MedicationDescription,:LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
 
                 // Execute statement
                 $stmt->execute([
-                        ':PatientFirtsNm' => $PatientFirtsNm,
+                        ':NationalId' => $NationalId,
+                        ':PatientFirstNm' => $PatientFirstNm,
                         ':PatientLastNm' => $PatientLastNm,
                         ':MedicationDescription' => $MedicationDescription,
                         ':LastUpdateDtm' => date("D M d, Y G:i")
@@ -134,14 +135,14 @@ class PacienteHandler {
             }
     }
 
-    public function updatePaciente($PatientId, $PatientFirtsNm, $PatientLastNm,  $MedicationDescription) {
+    public function updatePaciente($PatientId, $NationalId, $PatientFirstNm, $PatientLastNm,  $MedicationDescription) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
-                $sql = 'UPDATE patient SET PatientFirtsNm = "'.$PatientFirtsNm.'" , PatientLastNm = "'.$PatientLastNm.'", MedicationDescription = "'.$MedicationDescription.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE PatientId = ' .$PatientId.';';
+                $sql = 'UPDATE patient SET  NationalId = "'.$NationalId.'", PatientFirstNm = "'.$PatientFirstNm.'" , PatientLastNm = "'.$PatientLastNm.'", MedicationDescription = "'.$MedicationDescription.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE PatientId = ' .$PatientId.';';
 
                 $result = $file_db->exec($sql);
 
@@ -202,14 +203,14 @@ class EmpleadoHandler {
 
             if($data['isUpdate'] == 'true'){
                 try {
-                  echo $this-> updateEmpleado($data['EmployeeId'], $data['EmployeeFirtsNm'], $data['EmployeeLastNm'], $data['UserNm'], $data['Password']);
+                  echo $this-> updateEmpleado($data['EmployeeId'], $data['NationalId'], $data['EmployeeFirstNm'], $data['EmployeeLastNm'], $data['UserNm'], $data['Password']);
 
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
             } else{
                 try {
-                    echo $this-> insertarEmpleado( $data['EmployeeFirtsNm'], $data['EmployeeLastNm'], $data['UserNm'],$data['Password']);
+                    echo $this-> insertarEmpleado($data['NationalId'], $data['EmployeeFirstNm'], $data['EmployeeLastNm'], $data['UserNm'],$data['Password']);
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
@@ -251,7 +252,7 @@ class EmpleadoHandler {
     }
 
 
-    public function insertarEmpleado( $EmployeeFirtsNm, $EmployeeLastNm, $UserNm, $Password){
+    public function insertarEmpleado($NationalId,$EmployeeFirstNm, $EmployeeLastNm, $UserNm, $Password){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
@@ -259,7 +260,8 @@ class EmpleadoHandler {
                 // Create tables  #autoincremental
                 $file_db->exec("CREATE TABLE IF NOT EXISTS Employee (
                                 EmployeeId INTEGER PRIMARY KEY AUTOINCREMENT,
-                                EmployeeFirtsNm  TEXT,
+                                NationalId TEXT,
+                                EmployeeFirstNm  TEXT,
                                 EmployeeLastNm TEXT,
                                 UserNm TEXT,
                                 _Password TEXT,
@@ -268,13 +270,14 @@ class EmpleadoHandler {
                                 )");
 
 
-                $insert = "INSERT INTO Employee ( EmployeeFirtsNm, EmployeeLastNm, UserNm, _Password, CreateDtm, LastUpdateDtm)
-                            VALUES ( :EmployeeFirtsNm, :EmployeeLastNm, :UserNm, :_Password, :CreateDtm, :LastUpdateDtm)";
+                $insert = "INSERT INTO Employee (NationalId, EmployeeFirstNm, EmployeeLastNm, UserNm, _Password, CreateDtm, LastUpdateDtm)
+                            VALUES (:NationalId, :EmployeeFirstNm, :EmployeeLastNm, :UserNm, :_Password, :CreateDtm, :LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
 
                 // Execute statement
                 $stmt->execute([
-                        ':EmployeeFirtsNm' => $EmployeeFirtsNm,
+                        ':NationalId' => $NationalId,
+                        ':EmployeeFirstNm' => $EmployeeFirstNm,
                         ':EmployeeLastNm' => $EmployeeLastNm,
                         ':UserNm' => $UserNm,
                         ':_Password' => $Password,
@@ -293,14 +296,14 @@ class EmpleadoHandler {
             }
     }
 
-    public function updateEmpleado($EmployeeId, $EmployeeFirtsNm, $EmployeeLastNm, $UserNm, $Password) {
+    public function updateEmpleado($EmployeeId, $NationalId, $EmployeeFirstNm, $EmployeeLastNm, $UserNm, $Password) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
-                $sql = 'UPDATE Employee SET EmployeeFirtsNm = "'.$EmployeeFirtsNm.'" , EmployeeLastNm = "'.$EmployeeLastNm.'", UserNm = "'.$UserNm.'", _Password = "'.$Password.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE EmployeeId = ' .$EmployeeId.';';
+                $sql = 'UPDATE Employee SET NationalId = "'.$NationalId.'" EmployeeFirstNm = "'.$EmployeeFirtsNm.'" , EmployeeLastNm = "'.$EmployeeLastNm.'", UserNm = "'.$UserNm.'", _Password = "'.$Password.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE EmployeeId = ' .$EmployeeId.';';
 
                 $result = $file_db->exec($sql);
 
