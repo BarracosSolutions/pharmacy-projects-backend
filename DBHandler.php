@@ -525,14 +525,14 @@ class ProjectHandler {
 
             if($data['isUpdate'] == 'true'){
                 try {
-                  echo $this-> updateProject($data['ProjectId'], $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Funds'], $data['Regime'], $data['Report'] );
+                  echo $this-> updateProject($data['ProjectId'], $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data["ProjectNm"], $data['Funds'], $data['Regime'], $data['Report'] );
 
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
             } else{
                 try {
-                    echo $this-> insertarProject($data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Funds'], $data['Regime']);
+                    echo $this-> insertarProject($data["ProjectNm"], $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Funds'], $data['Regime']);
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
@@ -575,7 +575,7 @@ class ProjectHandler {
 
 
 
-    public function insertarProject($PatientId, $DrugId, $DirectorId, $Funds, $Regime){
+    public function insertarProject($ProjectNm,$PatientId, $DrugId, $DirectorId, $Funds, $Regime){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
@@ -608,6 +608,7 @@ class ProjectHandler {
                                 PatientId INTEGER,
                                 DrugId INTEGER,
                                 DirectorId INTEGER,
+                                ProjectNm TEXT,
                                 Funds TEXT,
                                 Regime TEXT,
                                 Report TEXT NULL,
@@ -619,8 +620,8 @@ class ProjectHandler {
                                 )");
 
 
-                $insert = "INSERT INTO Project ( ProjectStatusId, PatientId, DrugId, DirectorId, Funds, Regime, LastUpdateDtm )
-                            VALUES ( :ProjectStatusId, :PatientId, :DrugId, :DirectorId, :Funds, :Regime, :LastUpdateDtm)";
+                $insert = "INSERT INTO Project ( ProjectStatusId, PatientId, DrugId, DirectorId, ProjectNm, Funds, Regime, LastUpdateDtm )
+                            VALUES ( :ProjectStatusId, :PatientId, :DrugId, :DirectorId,:ProjectNm, :Funds, :Regime, :LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
 
                 // Execute statement
@@ -629,6 +630,7 @@ class ProjectHandler {
                         ':PatientId' => $PatientId,
                         ':DrugId' => $DrugId,
                         ':DirectorId' => $DirectorId,
+                        ':ProjectNm' => $ProjectNm,
                         ':Funds' => $Funds,
                         ':Regime' => $Regime,
                         ':LastUpdateDtm' => date("D M d, Y G:i")
@@ -645,14 +647,14 @@ class ProjectHandler {
             }
     }
 
-    public function updateProject($ProjectId, $ProjectStatusId, $PatientId, $DrugId, $DirectorId, $Funds, $Regime, $Report) {
+    public function updateProject($ProjectId, $ProjectStatusId, $PatientId, $DrugId, $DirectorId,$ProjectNm, $Funds, $Regime, $Report) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
-                $sql = 'UPDATE Project SET ProjectStatusId = "'.$ProjectStatusId.'" , PatientId = "'.$PatientId.'", DrugId = "'.$DrugId.'", DirectorId = "'.$DirectorId.'", Founds = "'.$Funds.'",
+                $sql = 'UPDATE Project SET ProjectStatusId = "'.$ProjectStatusId.'" , ProjectNm ="'.$ProjectNm.'" , PatientId = "'.$PatientId.'", DrugId = "'.$DrugId.'", DirectorId = "'.$DirectorId.'", Funds = "'.$Funds.'",
                  Regime = "'.$Regime.'", Report = "'.$Report.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE ProjectId = ' .$ProjectId.';';
 
                 $result = $file_db->exec($sql);
