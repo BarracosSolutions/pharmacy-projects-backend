@@ -525,14 +525,14 @@ class ProjectHandler {
 
             if($data['isUpdate'] == 'true'){
                 try {
-                  echo $this-> updateProject($data['ProjectId'], $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Founds'], $data['Regime'], $data['Report'] );
+                  echo $this-> updateProject($data['ProjectId'], $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Funds'], $data['Regime'], $data['Report'] );
 
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
             } else{
                 try {
-                    echo $this-> insertarProject(  $data['ProjectStatusId'],  $data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Founds'], $data['Regime'], $data['Report'] );
+                    echo $this-> insertarProject($data['PatientId'], $data['DrugId'], $data['DirectorId'], $data['Funds'], $data['Regime']);
                 } catch (Exception $e) {
                     echo "Failed: " . $e->getMessage();
                 }
@@ -575,12 +575,13 @@ class ProjectHandler {
 
 
 
-    public function insertarProject( $ProjectStatusId, $PatientId, $DrugId, $DirectorId, $Founds, $Regime, $Report){
+    public function insertarProject($PatientId, $DrugId, $DirectorId, $Funds, $Regime){
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 // Create tables # problema si employee table no esta
+                $ProjectStatusId = 1;
                 $file_db->exec("CREATE TABLE IF NOT EXISTS ProjectStatus(
                                     ProjectStatusId Integer PRIMARY KEY,
                                     StatusNm TEXT,
@@ -591,6 +592,8 @@ class ProjectHandler {
                                 INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(2, \"En Proceso\");
                                 INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(3, \"Completo\");
 
+
+
                                 CREATE TABLE IF NOT EXISTS Project_x_Employee(
                                     Project_EmployeeId Integer PRIMARY KEY AUTOINCREMENT,
                                     ProjectId Integer,
@@ -599,16 +602,15 @@ class ProjectHandler {
                                     FOREIGN KEY(EmployeeId) REFERENCES Employee(EmployeeId)
                                 );
 
-
                                 CREATE TABLE IF NOT EXISTS Project (
                                 ProjectId INTEGER PRIMARY KEY AUTOINCREMENT,
                                 ProjectStatusId  INTEGER,
                                 PatientId INTEGER,
                                 DrugId INTEGER,
                                 DirectorId INTEGER,
-                                Founds TEXT,
+                                Funds TEXT,
                                 Regime TEXT,
-                                Report TEXT,
+                                Report TEXT NULL,
                                 LastUpdateDtm TEXT,
                                 FOREIGN KEY(ProjectStatusId) REFERENCES ProjectStatus(ProjectStatusId),
                                 FOREIGN KEY(PatientId) REFERENCES Patient(PatientId),
@@ -617,8 +619,8 @@ class ProjectHandler {
                                 )");
 
 
-                $insert = "INSERT INTO Project ( ProjectStatusId, PatientId, DrugId, DirectorId, Founds, Regime, Report, LastUpdateDtm )
-                            VALUES ( :ProjectStatusId, :PatientId, :DrugId, :DirectorId, :Founds, :Regime, :Report, :LastUpdateDtm)";
+                $insert = "INSERT INTO Project ( ProjectStatusId, PatientId, DrugId, DirectorId, Funds, Regime, LastUpdateDtm )
+                            VALUES ( :ProjectStatusId, :PatientId, :DrugId, :DirectorId, :Funds, :Regime, :LastUpdateDtm)";
                 $stmt = $file_db->prepare($insert);
 
                 // Execute statement
@@ -627,9 +629,8 @@ class ProjectHandler {
                         ':PatientId' => $PatientId,
                         ':DrugId' => $DrugId,
                         ':DirectorId' => $DirectorId,
-                        ':Founds' => $Founds,
+                        ':Funds' => $Funds,
                         ':Regime' => $Regime,
-                        ':Report' => $Report,
                         ':LastUpdateDtm' => date("D M d, Y G:i")
                     ]);
 
@@ -644,14 +645,14 @@ class ProjectHandler {
             }
     }
 
-    public function updateProject($ProjectId, $ProjectStatusId, $PatientId, $DrugId, $DirectorId, $Founds, $Regime, $Report) {
+    public function updateProject($ProjectId, $ProjectStatusId, $PatientId, $DrugId, $DirectorId, $Funds, $Regime, $Report) {
             try{
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $flag = 1;
 
-                $sql = 'UPDATE Project SET ProjectStatusId = "'.$ProjectStatusId.'" , PatientId = "'.$PatientId.'", DrugId = "'.$DrugId.'", DirectorId = "'.$DirectorId.'", Founds = "'.$Founds.'",
+                $sql = 'UPDATE Project SET ProjectStatusId = "'.$ProjectStatusId.'" , PatientId = "'.$PatientId.'", DrugId = "'.$DrugId.'", DirectorId = "'.$DirectorId.'", Founds = "'.$Funds.'",
                  Regime = "'.$Regime.'", Report = "'.$Report.'", LastUpdateDtm = "'.date("D M d, Y G:i").'" WHERE ProjectId = ' .$ProjectId.';';
 
                 $result = $file_db->exec($sql);
