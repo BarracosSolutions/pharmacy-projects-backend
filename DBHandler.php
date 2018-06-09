@@ -855,6 +855,52 @@ class Employee_ProjectsHandler {
      }
 }
 
+class EmployeeSessionHandler{
+  function post($UserNm = null, $Password = null){
+    $data = json_decode(file_get_contents('php://input'), true);
+
+    if($data["UserNm"] != null || $data["Password"] != null){
+        try{
+          echo $this-> selectEmployee_Session($data["UserNm"], $data["Password"]);
+        }
+        catch(Exception $e){
+          echo "Failed: " . $e->getMessage();
+        }
+    }
+  }
+
+  public function selectEmployee_Session($UserNm,$Password){
+      try {
+          $file_db = new PDO('sqlite:farmacia.sqlite3');
+          $file_db->setAttribute(
+                 PDO::ATTR_ERRMODE,
+                                 PDO::ERRMODE_EXCEPTION
+             );
+
+         $file_db->exec("CREATE TABLE IF NOT EXISTS Employee (
+                         EmployeeId INTEGER PRIMARY KEY AUTOINCREMENT,
+                         NationalId TEXT,
+                         EmployeeFirstNm  TEXT,
+                         EmployeeLastNm TEXT,
+                         UserNm TEXT,
+                         _Password TEXT,
+                         CreateDtm TEXT,
+                         LastUpdateDtm TEXT
+                         )");
+
+          $statement  = $file_db->prepare('SELECT * FROM Employee WHERE UserNm = :UserNm and _Password = :_Password;');
+          $statement->bindValue(':UserNm', $UserNm);
+          $statement->bindValue(':_Password',$Password);
+          $statement->execute();
+          $result = $statement->fetch();
+          return json_encode($result);
+      } catch (PDOException $e) {
+          echo $e->getMessage();
+          return null;
+      }
+  }
+}
+
 Toro::serve(array(
     "/Patient" => "PacienteHandler",
     "/Patient/:alpha" => "PacienteHandler",
@@ -873,6 +919,8 @@ Toro::serve(array(
 
     "/Director_Projects" => "Director_ProjectsHandler",
     "/Director_Projects/:alpha" => "Director_ProjectsHandler",
+
+    "/Employee_Session" => "EmployeeSessionHandler",
 ));
 
 ?>
