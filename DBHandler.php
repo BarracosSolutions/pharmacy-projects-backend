@@ -815,7 +815,7 @@ class Director_ProjectsHandler {
              $statement  = $file_db->prepare('SELECT * FROM Project WHERE DirectorId = :DirectorId;');
              $statement->bindValue(':DirectorId', $DirectorId);
              $statement->execute();
-             $result = $statement->fetch();
+             $result = $statement->fetchAll();
              return json_encode($result);
          } catch (PDOException $e) {
              echo $e->getMessage();
