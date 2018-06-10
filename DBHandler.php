@@ -85,7 +85,7 @@ class PacienteHandler {
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
-                $statement  = $file_db->prepare('SELECT * FROM patient WHERE PatientId = :PatientId;');
+                $statement  = $file_db->prepare('SELECT * FROM patient WHERE PatitentId = :PatientId;');
                 $statement->bindValue(':PatientId', $PatientId);
                 $statement->execute();
                 sleep(2);
@@ -563,7 +563,7 @@ class ProjectHandler {
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
                 $statement  = $file_db->prepare('SELECT * FROM Project WHERE ProjectId = :ProjectId;');
-                $statement->bindValue(':ProjectId', $EmployeeId);
+                $statement->bindValue(':ProjectId', $ProjectId);
                 $statement->execute();
                 $result = $statement->fetch();
                 return json_encode($result);
@@ -584,23 +584,12 @@ class ProjectHandler {
                 $ProjectStatusId = 1;
                 $file_db->exec("CREATE TABLE IF NOT EXISTS ProjectStatus(
                                     ProjectStatusId Integer PRIMARY KEY,
-                                    StatusNm TEXT,
-                                    LastUpdateDtm TEXT
+                                    StatusNm TEXT
                                 );
 
-                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(1, \"Pendiente\");
-                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(2, \"En Proceso\");
-                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId, LastUpdateDtm) VALUES(3, \"Completo\");
-
-
-
-                                CREATE TABLE IF NOT EXISTS Project_x_Employee(
-                                    Project_EmployeeId Integer PRIMARY KEY AUTOINCREMENT,
-                                    ProjectId Integer,
-                                    EmployeeId Integer,
-                                    FOREIGN KEY(ProjectId) REFERENCES Project(ProjectId),
-                                    FOREIGN KEY(EmployeeId) REFERENCES Employee(EmployeeId)
-                                );
+                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId,StatusNm) VALUES(1, \"Pending\");
+                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId,StatusNm) VALUES(2, \"In Progress\");
+                                INSERT OR IGNORE INTO ProjectStatus(ProjectStatusId,StatusNm) VALUES(3, \"Finished\");
 
                                 CREATE TABLE IF NOT EXISTS Project (
                                 ProjectId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -812,7 +801,33 @@ class Director_ProjectsHandler {
                     PDO::ATTR_ERRMODE,
                                     PDO::ERRMODE_EXCEPTION
                 );
-             $statement  = $file_db->prepare('SELECT * FROM Project WHERE DirectorId = :DirectorId;');
+             $statement  = $file_db->prepare(' SELECT  Project.ProjectId
+                                                          ,Project.ProjectNm
+                                                          ,Project.ProjectStatusId
+                                                          ,ProjectStatus.StatusNm
+                                                          ,Project.DirectorId
+                                                          ,Employee.NationalId as DirectorNationalId
+                                                          ,Employee.EmployeeFirstNm
+                                                          ,Employee.EmployeeLastNm
+                                                          ,Project.PatientId
+                                                          ,Patient.NationalId as PatientNationalId
+                                                          ,Patient.PatientFirstNm
+                                                          ,Patient.PatientLastNm
+                                                          ,Project.DrugId
+                                                          ,Drug.DrugNm
+                                                          ,Project.Regime
+                                                          ,Project.Report
+                                                          ,Project.Funds
+                                                  FROM Project
+                                                  INNER JOIN Employee
+                                                    ON Project.DirectorId = Employee.EmployeeId
+                                                  INNER JOIN Patient
+                                                    ON Project.PatientId = Patient.PatientId
+                                                  INNER JOIN Drug
+                                                    ON Project.DrugId = Drug.DrugId
+                                                  INNER JOIN ProjectStatus
+                                                    ON Project.ProjectStatusId = ProjectStatus.ProjectStatusId
+                                                  WHERE Project.DirectorId = :DirectorId;');
              $statement->bindValue(':DirectorId', $DirectorId);
              $statement->execute();
              $result = $statement->fetchAll();
