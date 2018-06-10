@@ -85,7 +85,7 @@ class PacienteHandler {
                 $file_db = new PDO('sqlite:farmacia.sqlite3');
 		        $file_db->setAttribute(PDO::ATTR_ERRMODE,
 									PDO::ERRMODE_EXCEPTION);
-                $statement  = $file_db->prepare('SELECT * FROM patient WHERE PacientId = :PatientId;');
+                $statement  = $file_db->prepare('SELECT * FROM patient WHERE PatientId = :PatientId;');
                 $statement->bindValue(':PatientId', $PatientId);
                 $statement->execute();
                 sleep(2);
