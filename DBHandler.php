@@ -870,6 +870,39 @@ class Employee_ProjectsHandler {
      }
 }
 
+class ProjectDrugsHandler{
+  function get() {
+      try {
+          echo $this-> selectProject_Drugs();
+      } catch (Exception $e) {
+          echo "Failed: " . $e->getMessage();
+      }
+  }
+
+   public function selectProject_Drugs(){
+       try {
+           $file_db = new PDO('sqlite:farmacia.sqlite3');
+           $file_db->setAttribute(
+                  PDO::ATTR_ERRMODE,
+                  PDO::ERRMODE_EXCEPTION
+              );
+
+           $statement  = $file_db->prepare('SELECT  Drug.DrugNm
+                                                    ,Count(Drug.DrugId)
+                                            FROM Project
+                                              INNER JOIN Drug
+                                                ON Project.DrugId = Drug.DrugId
+                                            Group By Project.DrugId,DrugNm;');
+           $statement->execute();
+           $result = $statement->fetchAll();
+           return json_encode($result);
+       } catch (PDOException $e) {
+           echo $e->getMessage();
+           return null;
+       }
+   }
+}
+
 class EmployeeSessionHandler{
   function post($UserNm = null, $Password = null){
     $data = json_decode(file_get_contents('php://input'), true);
@@ -936,6 +969,8 @@ Toro::serve(array(
     "/Director_Projects/:alpha" => "Director_ProjectsHandler",
 
     "/Employee_Session" => "EmployeeSessionHandler",
+
+    "/Project_Drugs" => "ProjectDrugsHandler",
 ));
 
 ?>
